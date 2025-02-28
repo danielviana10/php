@@ -1,22 +1,29 @@
 <?php
-
 include "connection.php";
 
-$getData = file_get_contents("php://input");
+header('Content-Type: application/json');
 
+$getData = file_get_contents("php://input");
 $data = json_decode($getData);
 
-$id = $data->courses->id;
-$name = $data->courses->name;
-$price = $data->courses->price;
+if (isset($data->id)) {
+    $id = $data->id;
+    $name = $data->name;
+    $price = $data->price;
+    
+    $stmt = $connection->prepare("UPDATE courses SET name=?, price=? WHERE id=?");
+    $stmt->bind_param("sdi", $name, $price, $id);
 
-$sql = "UPDATE courses SET name='$name', price=$price WHERE id=$id";
-mysqli_query($connection, $sql);
-
-$course = [
-    'idCourse' => $id,
-    'nameCourse' => $name,
-    'priceCourse' => $price
-];
-
-json_encode(['course' => $course]);
+    if ($stmt->execute()) {
+        $course = [
+            'id' => $id,
+            'name' => $name,
+            'price' => $price
+        ];
+        echo json_encode(['course' => $course]);
+    } else {
+        echo json_encode(['error' => 'Erro ao atualizar curso']);
+    }
+} else {
+    echo json_encode(['error' => 'Dados inválidos']);
+}

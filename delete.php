@@ -1,13 +1,18 @@
 <?php
-
 include "connection.php";
 
-$getData = file_get_contents("php://input");
+header('Content-Type: application/json');
 
-$data = json_decode($getData);
+$id = $_GET['id'];
 
-$id = $data->courses->id;
-
-$sql = "DELETE FROM courses WHERE id=$id";
-mysqli_query($connection, $sql);
-
+if (isset($id)) {
+    $stmt = $connection->prepare("DELETE FROM courses WHERE id=?");
+    $stmt->bind_param("i", $id);
+    if ($stmt->execute()) {
+        echo json_encode(['message' => 'Curso deletado com sucesso']);
+    } else {
+        echo json_encode(['error' => 'Erro ao deletar curso']);
+    }
+} else {
+    echo json_encode(['error' => 'ID do curso não fornecido']);
+}
